@@ -74,3 +74,23 @@ b = generate_priority_unit_vector(dim=N, priority_levels=1,
                                   elements_in_levels=[1], alpha=0.01, ratio=0.8)
 print(compute_angles_with_basis_vectors(b))
 
+ds = input()
+ds =ds.split('\n')
+df = []
+for idx, x in enumerate(ds):
+    if idx in [0,1]:continue
+    name = ''
+    elements = []
+    flag = 0
+    for ix, i in enumerate(x.split()):
+        if (i.isalnum() or ix ==0 or i == 'C4.5') and flag ==0:
+            name = name +'_'+i
+        else:
+            flag=1
+            elements.append(i)
+    df.append([name.strip('_')]+elements)
+    
+tmp = pd.DataFrame(df)
+tmp.columns = ["Classifiers","TOPSIS-Value","TOPSIS-Rank","GRA-Value","GRA-Rank",
+               "VIKOR-Value","VIKOR-Rank","PROMETHEE_II-Value",
+               "PROMETHEE_II-Rank","ELECTRE_III-Value","ELECTRE_III-Rank"]

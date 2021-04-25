@@ -65,16 +65,16 @@ class mcdm_solver:
         if "decision" not in self.df.columns:
             print("solver hasn't been run, use 'solve' method first")
         else:
-            return self.df.loc[self.df.nlargest(min(n,self.df.shape[0]),
+            return self.df.loc[self.df.nsmallest(min(n,self.df.shape[0]),
                                                 "decision").index,cols+['decision']]
         
     
     class projection_pareto:
         def __init__(self,df, criterias, dict_args):
             #arg_order = [df, criterias,
-            #           min_max_bool = list_of_boolean -->indicating crierias are ranked in ascending order or not,
+            #           benefit = list_of_boolean -->indicating crierias are ranked in descending order or not,
             #           priority_levels=None, elements_in_levels=None, alpha =0.01, ratio=0.5]
-            min_max_bool = False if 'min_max_bool' not in dict_args.keys() else dict_args['min_max_bool']
+            benefit = False if 'benefit' not in dict_args.keys() else dict_args['benefit']
             levels = []
             col_order = []
             for i in range(len(criterias)):
@@ -96,19 +96,19 @@ class mcdm_solver:
             self.elements_in_levels = [len(x) for x in levels] if len(levels) !=0 else 0
             self.alpha = 0.01 if 'strength' not in dict_args.keys() else dict_args['alpha']
             self.ratio = 0.5 if 'dep_ratio' not in dict_args.keys() else dict_args['dep_ratio']
-            self.df = df[col_order]
+            self.df = df[[x for x in df.columns if x not in col_order]+col_order]
             self.criterias = col_order
             self.vector = None
-            if type(min_max_bool) == bool:
-                self.ascending = [min_max_bool for x in range(len(criterias))]
-            elif type(min_max_bool) == list:
-                if len(min_max_bool)==len(criterias):
-                    self.ascending = min_max_bool
+            if type(benefit) == bool:
+                self.ascending = [not benefit for x in range(len(criterias))]
+            elif type(benefit) == list:
+                if len(benefit)==len(criterias):
+                    self.ascending = [not x for x in benefit]
                 else:
-                    print("Length of min_mx_bool should be equal to number of criterias")
+                    print("Length of beneft should be equal to number of criterias")
                     return
             else:
-                print("Incorrect min_max_bool data type, expected boolean or list of boolean of criteria length")
+                print("Incorrect benefit data type, expected boolean or list of boolean of criteria length")
                 return
 
 
@@ -162,9 +162,9 @@ class mcdm_solver:
     class efficient_frontier_projection:
         def __init__(self,df, criterias, dict_args):
             #arg_order = [df, criterias,
-            #           min_max_bool = list_of_boolean -->indicating crierias are ranked in ascending order or not,
+            #           benefit = list_of_boolean -->indicating crierias are ranked in descending order or not,
             #           priority_levels=None, elements_in_levels=None, alpha =0.01, ratio=0.5]
-            min_max_bool = False if 'min_max_bool' not in dict_args.keys() else dict_args['min_max_bool']
+            benefit = False if 'benefit' not in dict_args.keys() else dict_args['benefit']
             levels = []
             col_order = []
             for i in range(len(criterias)):
@@ -186,21 +186,29 @@ class mcdm_solver:
             self.elements_in_levels = [len(x) for x in levels] if len(levels) !=0 else 0
             self.alpha = 0.01 if 'strength' not in dict_args.keys() else dict_args['alpha']
             self.ratio = 0.5 if 'dep_ratio' not in dict_args.keys() else dict_args['dep_ratio']
-            self.df = df[col_order]
+            self.df = df[[x for x in df.columns if x not in col_order]+col_order]
             self.criterias = col_order
             self.vector = None
-            if type(min_max_bool) == bool:
-                self.ascending = [min_max_bool for x in range(len(criterias))]
-            elif type(min_max_bool) == list:
-                if len(min_max_bool)==len(criterias):
-                    self.ascending = min_max_bool
+            if type(benefit) == bool:
+                self.ascending = [not benefit for x in range(len(criterias))]
+            elif type(benefit) == list:
+                if len(benefit)==len(criterias):
+                    self.ascending = [not x for x in benefit]
                 else:
-                    print("Length of min_mx_bool should be equal to number of criterias")
+                    print("Length of beneft should be equal to number of criterias")
                     return
             else:
-                print("Incorrect min_max_bool data type, expected boolean or list of boolean of criteria length")
+                print("Incorrect benefit data type, expected boolean or list of boolean of criteria length")
                 return
-
+        def _get_ratio_(self):
+            return self.ratio
+        def _set_ratio_(self, num):
+            self.ratio = num
+            return 
+        def _get_alpha_(self):
+            return self.alpha
+        def _set_alpha_(self,num):
+            self.alpha = num
 
         def count_pareto_dominanted(self,df, obj_cols):
             #df.sort_values(by=rank_cols[0], inplace = True)
@@ -252,12 +260,24 @@ class mcdm_solver:
 if __name__ != "__main__":  
     #df = pd.DataFrame(np.random.rand(500,5))
     #df.columns = ['a','b','c','d','e']
-    df = pd.DataFrame({'a':[6,8,3,2,10,4,7,1,5,9],'b':[10-x+1 for x in [8,7,6,1,9,5,10,3,4,2]]})
-    a = mcdm_solver(df, df.columns)
-    a.set_method("efficient_frontier_projection",min_max_bool=[True,False])    
-    a.solve()
+    #df = pd.DataFrame({'a':[6,8,3,2,10,4,7,1,5,9],'b':[10-x+1 for x in [8,7,6,1,9,5,10,3,4,2]]})
+    files = ['magical_telescope_dataset','adult_dataset','all_dataset_avg']
+    for var in files:
+        df = pd.read_csv(var+'.csv',index_col=0)
+        a = mcdm_solver(df, [x for x in df.columns if x != "Classifiers"])
+        a.set_method("efficient_frontier_projection",benefit=[True, True, False, True, True, True, True, True, False, False])#,P1 = a.criterias[:-2])#,P1 = a.criterias[:-2]    
+        a.solve()
+        a.solver.df.to_csv(var+'_efficient_frontier_projection.csv')
+    method = ['TOPSIS','GRA','VIKOR','PROMETHEE_II','ELECTRE_III']
+    for var in files:
+        print("Dataset ")
+        df = pd.read_csv(var+'_mcdm_results.csv',index_col=0)
+        result = pd.read_csv(var+'_efficient_frontier_projection_priority.csv',index_col=0)
+        df = df.merge(result[['Classifiers','Rank']],on='Classifiers',how='inner')
+        for meth in method:
+            print("correlation of _efficient_frontier_projection_priority vs",meth,np.corrcoef(df[meth+'-Rank'].values,df['Rank'].values)[1,0])
     a.get_strength()
-    a.set_strength(1)
+    a.set_strength(0.1)
     a.get_strength_depreciator()
     a.set_strength_depreciator(0.1)
     a.select_top_n_entities(5,df.columns.to_list())
