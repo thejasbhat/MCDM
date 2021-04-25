@@ -1,0 +1,58 @@
+Rank Correlation with coomonly used MCDM methods :
+
+In Dataset  magical_telescope_dataset
+correlation of projection_pareto vs TOPSIS 					0.9030570569973813
+correlation of projection_pareto vs GRA 					0.9637889643393106
+correlation of projection_pareto vs VIKOR 					0.8792923976027134
+correlation of projection_pareto vs PROMETHEE_II 			0.9585079289182729
+correlation of projection_pareto vs ELECTRE_III 			0.926821716392049
+In Dataset  adult_dataset
+correlation of projection_pareto vs TOPSIS 					0.805326296622302
+correlation of projection_pareto vs GRA 					0.8662973727072713
+correlation of projection_pareto vs VIKOR 					0.7011673749771463
+correlation of projection_pareto vs PROMETHEE_II 			0.8993233722532963
+correlation of projection_pareto vs ELECTRE_III 			0.8608787099344195
+In Dataset  all_dataset_avg
+correlation of projection_pareto vs TOPSIS 					0.7132862256552015
+correlation of projection_pareto vs GRA 					0.9220529258469681
+correlation of projection_pareto vs VIKOR 					0.5671391802103722
+correlation of projection_pareto vs PROMETHEE_II 			0.9830966226185612
+correlation of projection_pareto vs ELECTRE_III 			0.9046557008309873
+
+Dataset  magical_telescope_dataset 
+correlation of efficient_frontier_projection vs TOPSIS 			0.9030570569973813
+correlation of efficient_frontier_projection vs GRA 			0.9637889643393106
+correlation of efficient_frontier_projection vs VIKOR		    0.8792923976027134
+correlation of efficient_frontier_projection vs PROMETHEE_II 	0.9585079289182729
+correlation of efficient_frontier_projection vs ELECTRE_III 	0.926821716392049
+Dataset  adult_dataset 
+correlation of efficient_frontier_projection vs TOPSIS 			0.8217759719818183
+correlation of efficient_frontier_projection vs GRA 			0.8767442644220736
+correlation of efficient_frontier_projection vs VIKOR 			0.7173362163453328
+correlation of efficient_frontier_projection vs PROMETHEE_II 	0.9097252398862268
+correlation of efficient_frontier_projection vs ELECTRE_III 	0.873128472300719
+Dataset  all_dataset_avg 
+correlation of efficient_frontier_projection vs TOPSIS 			0.7132862256552015
+correlation of efficient_frontier_projection vs GRA 			0.9220529258469681
+correlation of efficient_frontier_projection vs VIKOR 			0.5671391802103722
+correlation of efficient_frontier_projection vs PROMETHEE_II    0.9830966226185612
+correlation of efficient_frontier_projection vs ELECTRE_III 	0.9046557008309873
+
+Dataset  magical_telescope_dataset
+correlation of _efficient_frontier_projection_priority vs TOPSIS        0.9044117647058825
+correlation of _efficient_frontier_projection_priority vs GRA           0.9705882352941178
+correlation of _efficient_frontier_projection_priority vs VIKOR         0.8823529411764707
+correlation of _efficient_frontier_projection_priority vs PROMETHEE_II  0.9681372549019608
+correlation of _efficient_frontier_projection_priority vs ELECTRE_III   0.9338235294117647
+Dataset  adult_dataset
+correlation of _efficient_frontier_projection_priority vs TOPSIS        0.8284313725490197
+correlation of _efficient_frontier_projection_priority vs GRA 			0.8823529411764707
+correlation of _efficient_frontier_projection_priority vs VIKOR 		0.7156862745098039
+correlation of _efficient_frontier_projection_priority vs PROMETHEE_II  0.911764705882353
+correlation of _efficient_frontier_projection_priority vs ELECTRE_III 	0.8826103200979145
+Dataset  all_dataset_avg
+correlation of _efficient_frontier_projection_priority vs TOPSIS 		0.7475490196078433
+correlation of _efficient_frontier_projection_priority vs GRA 			0.9338235294117647
+correlation of _efficient_frontier_projection_priority vs VIKOR 		0.5913781775102053
+correlation of _efficient_frontier_projection_priority vs PROMETHEE_II 	0.9839259787937259
+correlation of _efficient_frontier_projection_priority vs ELECTRE_III 	0.9191176470588237
