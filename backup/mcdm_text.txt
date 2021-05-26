@@ -96,7 +96,6 @@ class mcdm_solver:
             self.elements_in_levels = [len(x) for x in levels] if len(levels) !=0 else 0
             self.alpha = 0.01 if 'strength' not in dict_args.keys() else dict_args['alpha']
             self.ratio = 0.5 if 'dep_ratio' not in dict_args.keys() else dict_args['dep_ratio']
-            self.tie_break = 'dominate' if 'tie_break' not in dict_args.keys() else dict_args['tie_break']
             self.df = df[[x for x in df.columns if x not in col_order]+col_order]
             self.criterias = col_order
             self.vector = None
@@ -122,15 +121,6 @@ class mcdm_solver:
             dd = np.greater_equal(bb,cc)
             ee = np.all(dd,axis=1)
             return np.sum(ee, axis=0)-1
-        def count_pareto_dominanted(self,df, obj_cols):
-            #df.sort_values(by=rank_cols[0], inplace = True)
-            aa = df[obj_cols].values
-            aa= aa.astype(int)
-            bb = np.dstack([aa]*aa.shape[0])
-            cc = np.swapaxes(bb,0,2)
-            dd = np.less(bb,cc) 
-            ee = np.all(dd,axis=1)
-            return np.sum(ee, axis=0)
         def _get_ratio_(self):
             return self.ratio
         def _set_ratio_(self, num):
@@ -140,11 +130,6 @@ class mcdm_solver:
             return self.alpha
         def _set_alpha_(self,num):
             self.alpha = num
-        def get_tie_breaker(self):
-            return self.tie_break
-        def set_tie_breaker(self,strg):
-            self.tie_break = strg
-            return
         def _solve_(self):
             if len(self.criterias) == 1:
                 self.df["decision"] = self.df[self.criterias[0]].rank(method = "dense",
@@ -164,18 +149,11 @@ class mcdm_solver:
                 rank_cols = [x+"_rank" for x in self.criterias]
                 for idx, ele in enumerate(self.criterias):
                     self.df[ele+"_rank"] = self.df[ele].rank(method = "dense", ascending = self.ascending[idx])
-                self.df["vector_projections"] = self.vector.compute_vector_projection(self.df, cols=rank_cols, priority=priority)
-                if self.tie_break == 'dominate':
-                    self.df["pareto_domination"] = self.count_pareto_dominantion(self.df,obj_cols= rank_cols)
-                    sort_cols = ['vector_projections', 'pareto_domination']
-                    tups = self.df[sort_cols].sort_values(sort_cols, ascending=[True,False]).apply(tuple, 1)
-                elif self.tie_break == 'dominated_by':
-                    self.df["pareto_domination"] = self.count_pareto_dominanted(self.df,obj_cols= rank_cols)
-                    sort_cols = ['vector_projections', 'pareto_domination']
-                    tups = self.df[sort_cols].sort_values(sort_cols, ascending=[True,True]).apply(tuple, 1)
-                else:
-                    print("Incorrect tie_break method, try one of [dominate, dominated_by]")
-                    return
+                self.df["pareto_domination"] = self.count_pareto_dominantion(self.df,obj_cols= rank_cols)
+                self.df["vector_projections"] = self.vector.compute_vector_projection(self.df, cols=rank_cols,
+                                                                                      priority=priority)
+                sort_cols = ['vector_projections', 'pareto_domination']
+                tups = self.df[sort_cols].sort_values(sort_cols, ascending=[True,False]).apply(tuple, 1)
                 f, i = pd.factorize(tups)
                 factorized = pd.Series(f + 1, tups.index)
                 self.df = self.df.assign(Rank=factorized)
@@ -279,49 +257,29 @@ class mcdm_solver:
                     rank_na_count = np.sum(self.df['Rank'].isna())
                 return self.df["Rank"]
 #############################  Execution ######################################
-if __name__ == "__main__":  
+if __name__ != "__main__":  
     #df = pd.DataFrame(np.random.rand(500,5))
     #df.columns = ['a','b','c','d','e']
     #df = pd.DataFrame({'a':[6,8,3,2,10,4,7,1,5,9],'b':[10-x+1 for x in [8,7,6,1,9,5,10,3,4,2]]})
     files = ['magical_telescope_dataset','adult_dataset','all_dataset_avg']
-    method = 'projection_pareto'
-    methods_ = ['TOPSIS','GRA','VIKOR','PROMETHEE_II','ELECTRE_III']
-    tie_break = 'dominated_by'
-    priority = True
-    strength = 0.1
-    file_names = []
     for var in files:
         df = pd.read_csv(var+'.csv',index_col=0)
         a = mcdm_solver(df, [x for x in df.columns if x != "Classifiers"])
-        if priority:
-            a.set_method(method,benefit=[True, True, False, True, True, True, True, True, False, False],P1 = a.criterias[:-2],tie_break=tie_break)#,P1 = a.criterias[:-2]
-            print(a.get_strength())
-            a.set_strength(strength)
-        else:
-            a.set_method(method,benefit=[True, True, False, True, True, True, True, True, False, False],tie_break=tie_break)#,P1 = a.criterias[:-2])#,P1 = a.criterias[:-2]
+        a.set_method("efficient_frontier_projection",benefit=[True, True, False, True, True, True, True, True, False, False])#,P1 = a.criterias[:-2])#,P1 = a.criterias[:-2]    
         a.solve()
-        if priority :
-            file_ = var+'_mcdm_results_{}_{}_priority_{}.csv'.format(method,a.solver.get_tie_breaker(),a.get_strength())
-            a.solver.df.to_csv(file_)
-            file_names.append(file_)
-        else:
-            file_ = var+'_mcdm_results_{}_{}.csv'.format(method,a.solver.get_tie_breaker())
-            a.solver.df.to_csv(file_)
-            file_names.append(file_)
-
-        other_methods_df = pd.read_csv(var+'_mcdm_results.csv',index_col=0)
-        result = a.solver.df
-        other_methods_df = other_methods_df.merge(result[['Classifiers','Rank']],on='Classifiers',how='inner')
-        
-        for meth in methods_:
-            out = file_+','+meth+','+str(np.corrcoef(other_methods_df[meth+'-Rank'].values,other_methods_df['Rank'].values)[1,0])+'\n'
-            with open("results_new.txt", "a") as myfile:
-                myfile.write(out)
-            print(out)
-    #a.get_strength()
-    #a.set_strength(0.1)
-    #a.get_strength_depreciator()
-    #a.set_strength_depreciator(0.1)
-    #a.select_top_n_entities(5,df.columns.to_list())
+        a.solver.df.to_csv(var+'_efficient_frontier_projection.csv')
+    method = ['TOPSIS','GRA','VIKOR','PROMETHEE_II','ELECTRE_III']
+    for var in files:
+        print("Dataset ")
+        df = pd.read_csv(var+'_mcdm_results.csv',index_col=0)
+        result = pd.read_csv(var+'_efficient_frontier_projection_priority.csv',index_col=0)
+        df = df.merge(result[['Classifiers','Rank']],on='Classifiers',how='inner')
+        for meth in method:
+            print("correlation of _efficient_frontier_projection_priority vs",meth,np.corrcoef(df[meth+'-Rank'].values,df['Rank'].values)[1,0])
+    a.get_strength()
+    a.set_strength(0.1)
+    a.get_strength_depreciator()
+    a.set_strength_depreciator(0.1)
+    a.select_top_n_entities(5,df.columns.to_list())
 #from mcdm import mcdm_solver
 #a = mcdm_solver()
